@@ -1,0 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_CITIES 16
+#define INF 1e9
+
+int n;
+int cost[MAX_CITIES][MAX_CITIES];
+// dp[mask][u] stores the minimum cost to visit the remaining cities 
+// where 'mask' represents the set of visited cities and 'u' is the current city.
+int dp[1 << MAX_CITIES][MAX_CITIES];
+
+// Helper function to return the minimum of two integers
+int min(int a, int b) {
+    return (a < b) ? a : b;
+}
+
+// TSP solver using recursion with memoization (Top-Down Dynamic Programming)
+int tsp(int mask, int u) {
+    // If all cities have been visited, return the cost to go back to the starting city (0)
+    if (mask == (1 << n) - 1) {
+        if (cost[u][0] != -1) {
+            return cost[u][0];
+        }
+        return INF; // Return infinity if no route exists back to start node
+    }
+
+    // Return the cached result if already calculated
+    if (dp[mask][u] != -1) {
+        return dp[mask][u];
+    }
+
+    int res = INF;
+
+    // Try visiting all other unvisited cities next
+    for (int v = 0; v < n; v++) {
+        // If city v is not yet visited and a valid road exists
+        if (!(mask & (1 << v)) && cost[u][v] != -1) {
+            int new_cost = cost[u][v] + tsp(mask | (1 << v), v);
+            res = min(res, new_cost);
+        }
+    }
+
+    return dp[mask][u] = res;
+}
+
+int main() {
+    if (scanf("%d", &n) != 1) return 0;
+
+    // Read the cost matrix
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            scanf("%d", &cost[i][j]);
+        }
+    }
+
+    // Initialize the DP table with -1 to indicate uncalculated states
+    for (int i = 0; i < (1 << n); i++) {
+        for (int j = 0; j < n; j++) {
+            dp[i][j] = -1;
+        }
+    }
+
+    // Start tracking paths from city 0, with only city 0 marked as visited (mask = 1)
+    int optimal_cost = tsp(1, 0);
+
+    // If the path is unreachable, print -1 or INF depending on fallback configurations
+    if (optimal_cost >= INF) {
+        printf("-1\n");
+    } else {
+        printf("%d\n", optimal_cost);
+    }
+
+    return 0;
+}
+
