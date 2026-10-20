@@ -1,0 +1,106 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+#define INF 1e9 // Using a large value to represent Infinity
+
+// Structure to represent an edge in the graph
+typedef struct {
+    int u, v, w;
+} Edge;
+
+// Function to print the forward path from source to target recursively or iteratively
+void printPath(int parent[], int current, int src) {
+    int path[1005];
+    int count = 0;
+    int temp = current;
+    
+    // Backtrack from target to source
+    while (temp != -1) {
+        path[count++] = temp;
+        if (temp == src) break;
+        temp = parent[temp];
+    }
+    
+    // Print the path from source to target
+    for (int i = count - 1; i >= 0; i--) {
+        printf("%d", path[i]);
+        if (i > 0) {
+            printf("->");
+        }
+    }
+}
+
+void bellmanFord(Edge edges[], int V, int E, int src) {
+    int *dist = (int *)malloc((V + 1) * sizeof(int));
+    int *parent = (int *)malloc((V + 1) * sizeof(int));
+    
+    // Step 1: Initialize distances from src to all other vertices as INFINITY
+    for (int i = 1; i <= V; i++) {
+        dist[i] = INF;
+        parent[i] = -1;
+    }
+    dist[src] = 0;
+
+    // Step 2: Relax all edges |V| - 1 times
+    for (int i = 1; i <= V - 1; i++) {
+        for (int j = 0; j < E; j++) {
+            int u = edges[j].u;
+            int v = edges[j].v;
+            int w = edges[j].w;
+            if (dist[u] != INF && dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                parent[v] = u;
+            }
+        }
+    }
+
+    // Step 3: Check for negative-weight cycles
+    for (int j = 0; j < E; j++) {
+        int u = edges[j].u;
+        int v = edges[j].v;
+        int w = edges[j].w;
+        if (dist[u] != INF && dist[u] + w < dist[v]) {
+            printf("Negative cycle detected\n");
+            free(dist);
+            free(parent);
+            return;
+        }
+    }
+
+    // Step 4: Print shortest distances and paths
+    for (int i = 1; i <= V; i++) {
+        if (i == src) continue;
+
+        if (dist[i] == INF) {
+            printf("%d INF None\n", i);
+        } else {
+            printf("%d %d ", i, dist[i]);
+            printPath(parent, i, src);
+            printf("\n");
+        }
+    }
+
+    free(dist);
+    free(parent);
+}
+
+int main() {
+    int V, E;
+    if (scanf("%d", &V) != 1) return 0;
+    if (scanf("%d", &E) != 1) return 0;
+
+    Edge *edges = (Edge *)malloc(E * sizeof(Edge));
+    for (int i = 0; i < E; i++) {
+        scanf("%d %d %d", &edges[i].u, &edges[i].v, &edges[i].w);
+    }
+
+    int src;
+    scanf("%d", &src);
+
+    bellmanFord(edges, V, E, src);
+
+    free(edges);
+    return 0;
+}
+
